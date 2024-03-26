@@ -4,7 +4,7 @@
 
 This gem is for people who think it's weird that Rails offers so many ways to
 validate models before you create and update them, but all it gives you is a
-`before_destroy` hook if before permanently destroying them.
+`before_destroy` hook before you permanently destroy them.
 
 Think of `dry_eraser` as adding validation for `ActiveRecord#destroy`. To that
 end, it defines `dry_erase` and `dry_erasable?` methods for your models that
