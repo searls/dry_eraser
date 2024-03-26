@@ -265,4 +265,4 @@ Okay, job's done. Happy erasing!
 
 ## License
 
-This is an [MIT](/LICENSE.txt) joint.
+This one's an [MIT](/LICENSE.txt) joint.
