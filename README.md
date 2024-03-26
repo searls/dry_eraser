@@ -6,14 +6,14 @@ This gem is for people who think it's weird that Rails offers so many ways to
 validate models before you create and update them, but all it gives you is a
 `before_destroy` hook before you permanently destroy them.
 
-Think of `dry_eraser` as adding validation for `ActiveRecord#destroy`. To that
-end, it defines `dry_erase` and `dry_erasable?` methods for your models that
-behave similarly to `validates` and `valid?`. This way, you won't have to
-remember how to register a `before_destroy` callback. Or that `throw(:abort)` is
-the magical incantation to cancel the callback chain. If you're suspicious of
-pulling in a dependency for something like this (and you should be), the fact
-its [implementation is 50 lines soaking wet](lib/dry_eraser.rb) might put you at
-ease.
+Think of `dry_eraser` as adding a validation feature to `ActiveRecord#destroy`.
+To that end, it defines `dry_erase` and `dry_erasable?` methods for your models,
+which behave analogously to `validates` and `valid?`, respectively. This way,
+you won't need to register a `before_destroy` callback and then remember
+`throw(:abort)` is the magical incantation needed to cancel the callback chain.
+If you're suspicious of pulling in a dependency for something like this (and you
+should be), the fact its [implementation is 50 lines soaking
+wet](lib/dry_eraser.rb) will hopefully put you at ease.
 
 Here's how to use it.
 
