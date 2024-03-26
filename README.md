@@ -1,5 +1,7 @@
 # dry_eraser – a _dry_ run before you _erase_ your models
 
+![dry_eraser](https://github.com/searls/dry_eraser/assets/79303/5dd8375e-c513-4f27-a90c-d74a2acaa62e)
+
 This gem is for people who think it's weird that Rails offers so many ways to
 validate models before you create and update them, but all it gives you is a
 `before_destroy` hook if before permanently destroying them.
