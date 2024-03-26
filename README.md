@@ -1,35 +1,109 @@
-# DryEraser
+# dry_eraser
 
-TODO: Delete this and the text below, and describe your gem
+**`dry_eraser` provides a _dry_ run before you _erase_ your models.**
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/dry_eraser`. To experiment with that code, run `bin/console` for an interactive prompt.
+This gem is for people who think it's weird that Rails offers so many ways to
+validate models before you create and update them, but all it gives you is a
+`before_destroy` hook if before permanently destroying them.
 
-## Installation
+Think of `dry_eraser` as adding validation for `ActiveRecord#destroy`. To that
+end, it defines `dry_erase` and `dry_erasable?` methods for your models that
+behave similarly to `validates` and `valid?`. This way, you won't have to
+remember how to register a `before_destroy` callback. Or that `throw(:abort)` is
+the magical incantation to cancel the callback chain. If you're suspicious of
+pulling in a dependency for something like this (and you should be), the fact
+its [implementation is 50 lines soaking wet](lib/dry_eraser.rb) might put you at
+ease.
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+Here's how to use it.
 
-Install the gem and add to the application's Gemfile by executing:
+## Install
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+Add it to your Gemfile:
 
-If bundler is not being used to manage dependencies, install the gem by executing:
+```ruby
+gem "dry_eraser"
+```
 
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_IMMEDIATELY_AFTER_RELEASE_TO_RUBYGEMS_ORG
+That's it. Rails should load it automatically.
 
 ## Usage
 
-TODO: Write usage instructions here
+Whenever there's a situation in which you know you _don't_ want a `destroy`
+operation to go through, you can specify it by calling the `dry_erase` class
+method on your model.
 
-## Development
+Let's take an example `Whiteboard` model. Suppose it has a boolean attribute
+called `someone_wrote_do_not_erase_on_me` and you want to be sure `destroy` operations
+are aborted when that attribute is true.
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+You could:
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+```ruby
+class Whiteboard < ActiveRecord::Base
+  dry_erase :no_one_said_not_to_erase_it
 
-## Contributing
+  private
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/searls/dry_eraser.
+  def no_one_said_not_to_erase_it
+    if someone_wrote_do_not_erase_on_me?
+      errors.add(:someone_wrote_do_not_erase_on_me, "so I can't erase it")
+    end
+  end
+end
+```
 
-## License
+This way, whenever `someone_wrote_do_not_erase_on_me?` is true, `destroy` will
+return `false` (just like `save` returns false when validations fail).
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+This, combined with the fact that `dry_erase` determines success based on the
+absence or presence of `errors` on the model instance will allow you to write
+code that branches on whether destroy succeeded, just like you would for `save`
+or `update`:
+
+```ruby
+whiteboard = Whiteboard.create!(someone_wrote_do_not_erase_on_me: true)
+if whiteboard.destroy
+  flash[:notice] = "Whiteboard deleted!"
+  redirect_to whiteboards_path
+else
+  flash[:error] = whiteboard.errors.full_messages
+  render :show, status: :unprocessable_entity
+end
+```
+
+If you don't want to call `destroy` to know whether a model is safe to destroy,
+you can also call `dry_erasable?` and it'll populate the `errors` object all
+the same:
+
+```ruby
+whiteboard = Whiteboard.create!(someone_wrote_do_not_erase_on_me: true
+whiteboard.dry_erasable?
+=> false
+whiteboard.errors.full_messages.first
+=> "Someone wrote do not erase on me so I can't erase it"
+```
+
+## Other stuff you can pass to `dry_erase`
+
+The `dry_erase` method can take one or more of any of the following:
+
+* A symbol or string name of an instance method on the model
+* A class that has a no-arg constructor and a `dry_erase(model)` method
+* An object that responds to a `dry_erase(model)` model
+* An object (e.g. a proc or lambda) that responds to `call(model)`
+
+You can see all of these uses in the gem's [test fixture]():
+
+```ruby
+# You can put more than one on one line
+dry_erase :must_have_content, AnnoyingCoworkerMessageEraser
+
+# Or pass a lambda
+dry_erase ->(model) { model.content == "🖍️" && model.errors.add(:base, "No crayon, c'mon!") }
+
+# Or an instance of a class that requires static configuration
+dry_erase ForeignKeyEraser.new(Classroom, :whiteboard)
+```
+
+And that's about it.
