@@ -1,6 +1,4 @@
-# dry_eraser
-
-**`dry_eraser` provides a _dry_ run before you _erase_ your models.**
+# dry_eraser – a _dry_ run before you _erase_ your models
 
 This gem is for people who think it's weird that Rails offers so many ways to
 validate models before you create and update them, but all it gives you is a
