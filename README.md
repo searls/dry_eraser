@@ -72,7 +72,7 @@ else
 end
 ```
 
-Want know whether a model is can be safely destroyed before you `destroy` it?
+Want to know whether a model is can be safely destroyed before you `destroy` it?
 You can also call `dry_erasable?` and it'll either return `true` or return
 `false` (and populate the `errors` object all the same):
 
