@@ -23,7 +23,7 @@ Add it to your Gemfile:
 gem "dry_eraser"
 ```
 
-That's it. Rails should load it automatically.
+Then run `bundle install`. That's it. Rails should load it automatically.
 
 ## Usage
 
@@ -82,6 +82,10 @@ whiteboard.errors.full_messages.first
 => "Someone wrote do not erase on me so I can't erase it"
 ```
 
+Important note, since `dry_eraser` mutates the same `errors` object as built-in
+validations do: calling `dry_erasable?` or `destroy` will _clear_ the model's
+`errors` object first.
+
 ## Other stuff you can pass to `dry_erase`
 
 The `dry_erase` method can take one or more of any of the following:
@@ -91,7 +95,7 @@ The `dry_erase` method can take one or more of any of the following:
 * An object that responds to a `dry_erase(model)` model
 * An object (e.g. a proc or lambda) that responds to `call(model)`
 
-You can see all of these uses in the gem's [test fixture]():
+You can see all of these uses in the gem's [test fixture](test/fixtures.rb):
 
 ```ruby
 # You can put more than one on one line
